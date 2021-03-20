@@ -1,0 +1,128 @@
+---
+title: "Areal Data Overview"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(mnormt)
+library(spdep)
+set.seed(03202021)
+```
+
+
+## Proximity Matrix
+Similar to the distance matrix with point-reference data, a proximity matrix $W$ is used to model areal data.
+
+\vfill
+
+
+\vfill
+
+
+\vfill
+
+#### Grid Example
+Create an adjacency matrix with diagonal neigbors
+
+\vfill
+
+Create an adjacency matrix without diagonal neigbors
+
+```{r, echo = F}
+d=data.frame(xmin=c(0.5,0.5,0.5,-.5,-.5,-.5,-1.5,-1.5,-1.5),
+             xmax=c(1.5,1.5,1.5,.5,.5,.5,-.5,-.5,-.5),
+             ymin=rep(c(.5,-.5,-1.5), 3), 
+             ymax=rep(c(1.5,.5,-.5), 3),
+             id=c(1,2,3,4,5,6,7,8,9))
+ggplot() + 
+  scale_x_continuous(name="x") + 
+  scale_y_continuous(name="y") +
+  geom_rect(data=d, mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), color="black", alpha=0.05) +
+  geom_text(data=d, aes(x=xmin+(xmax-xmin)/2, y=ymin+(ymax-ymin)/2, label=id), size=4) +
+  theme_minimal()
+
+```
+
+\newpage
+
+## Spatial Association
+
+There are two common statistics used for assessing spatial association:
+Moran's I and Geary's C.
+
+\vfill
+
+Moran's I
+$$I =\frac{n \sum_i \sum_j w_{ij} (Y_i - \bar{Y})(Y_j -\bar{Y})}{(\sum_{i\neq j \;w_{ij}})\sum_i(Y_i - \bar{Y})^2}$$
+
+\vfill
+
+
+\vfill
+
+Geary's C
+$$C=\frac{(n-1)\sum_i \sum_j w_{ij}(Y_i-Y_j)^2}{2(\sum_{i \neq j \; w_{ij}})\sum_i (Y_i - \bar{Y})^2}$$
+
+\vfill
+
+
+\vfill
+\newpage
+
+## Spatial Association Exercise
+
+Consider the following scenarios and use the following 4-by-4 grid
+
+```{r, echo = F}
+d4 <- tibble(xmin = rep(c(3.5, 2.5, 1.5, 0.5), each = 4),
+             x = rep(4:1, each =4),      
+             xmax = rep(c(3.5, 2.5, 1.5, 0.5), each = 4) +1,
+             ymin = rep(c(3.5, 2.5, 1.5, 0.5), 4), 
+             y = rep(4:1, 4),
+             ymax = rep(c(3.5, 2.5, 1.5, 0.5), 4) +1,
+             rpos = rep(4:1, 4),
+             cpos = rep(1:4, each = 4),
+             id=16:1)
+ggplot() + 
+  scale_x_continuous(name="column") + 
+  scale_y_continuous(name="row",breaks = 1:4,labels = c('4','3','2', '1') ) +
+  geom_rect(data=d4, mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), color="black", alpha=0.05) +
+  geom_text(data=d4, aes(x=xmin+(xmax-xmin)/2, y=ymin+(ymax-ymin)/2, label=id), size=4) +
+  theme_minimal()
+```
+
+and proximity matrix 
+
+```{r}
+W <- matrix(0, 16, 16)
+for (i in 1:16){
+  W[i,] <- as.numeric((d4$rpos[i] == d4$rpos & (abs(d4$cpos[i] - d4$cpos) == 1)) | 
+                        (d4$cpos[i] == d4$cpos & (abs(d4$rpos[i] - d4$rpos) == 1)))
+}
+head(W)
+```
+\vfill
+
+for each scenario plot the grid, calculate I `spdep::moran.test` and G `spdep::geary.test`.
+
+\newpage
+
+1. Simulate data where the responses are i.i.d. N(0,1). 
+
+
+
+\vfill
+
+
+2. Simulate data and calculate I and G for a 4-by-4 grid with a chess board approach, where "black squares" $\sim N(-2,1)$ and "white squares" $\sim N(2,1)$.
+
+
+\vfill
+
+
+3. Simulate multivariate normal response on a 4-by-4 grid where $y \sim N(0, (I- \rho W)^{-1})$, where $\rho = .3$ is a correlation parameter and $W$ is a proximity matrix.
+
+
+\vfill
